@@ -20,19 +20,26 @@ type HTTPServer struct {
 	IdleTimeout time.Duration `yaml:"idle_timeout"`
 }
 
+type ConfigPath struct {
+	Path string `env:"CONFIG_PATH"`
+}
+
 func MustLoad() *Config {
-	configPath := os.Getenv("CONFIG_PATH")
-	if configPath == "" {
+
+	var configPath ConfigPath
+
+	err := cleanenv.ReadConfig(".env", &configPath)
+	if configPath.Path == "" {
 		log.Fatal("CONFIG_PATH is not valid")
 	}
 
 	//check if file exist
-	_, err := os.ReadFile(configPath)
+	_, err = os.ReadFile(configPath.Path)
 	if err != nil {
 		log.Fatalf("Error with config file: %s", err)
 	}
 	var cfg Config
-	err = cleanenv.ReadConfig(configPath, &cfg)
+	err = cleanenv.ReadConfig(configPath.Path, &cfg)
 	if err != nil {
 		log.Fatalf("Error with reading config: %s", err)
 	}
