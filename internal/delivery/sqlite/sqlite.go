@@ -1,8 +1,10 @@
 package sqlite
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
+	"time"
 
 	_ "github.com/mattn/go-sqlite3"
 )
@@ -37,4 +39,25 @@ func New(db_path string) (*Storage, error) {
 	var storage Storage
 	storage.db = db
 	return &storage, nil
+}
+
+func (s *Storage) SaveTask(ctx context.Context, name, description string, deadline time.Time) (int64, error) {
+	const op = "internal.delivery.sqlite.SaveTask"
+
+	stmt, err := s.db.Prepare(`INSERT INTO tasks (name, description, deadline)
+	VALUES (?, ?, ?)`)
+	if err != nil {
+		return 0, fmt.Errorf("%s: %w", op, err)
+	}
+	res, err := stmt.ExecContext(ctx, name, description, deadline)
+	if err != nil {
+		return 0, fmt.Errorf("%s: %w", op, err)
+	}
+
+	id, err := res.LastInsertId()
+	if err != nil {
+		return 0, fmt.Errorf("%s: %w", op, err)
+	}
+
+	return id, nil
 }
