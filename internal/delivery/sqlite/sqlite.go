@@ -9,6 +9,10 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 )
 
+type TaskRepository interface {
+	SaveTask(ctx context.Context, name, description string, deadline time.Time) (int64, error)
+}
+
 type Storage struct {
 	db *sql.DB
 }

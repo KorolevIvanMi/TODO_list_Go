@@ -5,12 +5,12 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/KorolevIvanMi/TODO_list_Go/internal/delivery/sqlite"
 	"github.com/KorolevIvanMi/TODO_list_Go/internal/domain"
-	"github.com/KorolevIvanMi/TODO_list_Go/internal/repository"
 )
 
 type UseCase struct {
-	repo repository.TaskRepository
+	repo sqlite.TaskRepository
 }
 
 type CreatedTask struct {
@@ -20,7 +20,7 @@ type CreatedTask struct {
 	Deadline    time.Time
 }
 
-func New(repo repository.TaskRepository) *UseCase {
+func New(repo sqlite.TaskRepository) *UseCase {
 	var uc UseCase
 	uc.repo = repo
 	return &uc
