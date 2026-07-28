@@ -9,7 +9,6 @@ import (
 	taskhandler "github.com/KorolevIvanMi/TODO_list_Go/internal/delivery/http/handler/task_handler"
 	"github.com/KorolevIvanMi/TODO_list_Go/internal/delivery/sqlite"
 	"github.com/KorolevIvanMi/TODO_list_Go/internal/logger"
-	"github.com/KorolevIvanMi/TODO_list_Go/internal/repository"
 	"github.com/KorolevIvanMi/TODO_list_Go/internal/usecase"
 	"github.com/go-chi/chi/v5"
 )
@@ -32,7 +31,7 @@ func main() {
 	}
 
 	log.Info("Data base ready")
-	var repo repository.TaskRepository = storage
+	var repo sqlite.TaskRepository = storage
 
 	taskUseCase := usecase.New(repo)
 
