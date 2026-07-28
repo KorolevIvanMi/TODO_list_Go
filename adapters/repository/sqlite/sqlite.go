@@ -7,6 +7,7 @@ import (
 	"time"
 
 	_ "github.com/mattn/go-sqlite3"
+	"github.com/pressly/goose/v3"
 )
 
 type TaskRepository interface {
@@ -25,19 +26,10 @@ func New(db_path string) (*Storage, error) {
 		return nil, fmt.Errorf("%s: %w", op, err)
 	}
 
-	stmt, err := db.Prepare(`CREATE TABLE IF NOT EXISTS tasks (
-	id INTEGER PRIMARY KEY,
-	name TEXT NOT NULL,
-	description TEXT,
-	deadline DATE );
-	CREATE INDEX IF NOT EXISTS id_name ON tasks(name) `)
-	if err != nil {
+	if err := goose.SetDialect("sqlite3"); err != nil {
 		return nil, fmt.Errorf("%s: %w", op, err)
 	}
-	defer stmt.Close()
-
-	_, err = stmt.Exec()
-	if err != nil {
+	if err := goose.Up(db, "./migrations"); err != nil {
 		return nil, fmt.Errorf("%s: %w", op, err)
 	}
 
