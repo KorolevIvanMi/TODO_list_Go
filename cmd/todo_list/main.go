@@ -29,6 +29,7 @@ func main() {
 		log.Error(err.Error())
 		os.Exit(1)
 	}
+	defer storage.Close()
 
 	log.Info("Data base ready")
 	var repo sqlite.TaskRepository = storage

@@ -34,6 +34,7 @@ func New(db_path string) (*Storage, error) {
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", op, err)
 	}
+	defer stmt.Close()
 
 	_, err = stmt.Exec()
 	if err != nil {
@@ -45,6 +46,10 @@ func New(db_path string) (*Storage, error) {
 	return &storage, nil
 }
 
+func (s *Storage) Close() error {
+	return s.db.Close()
+}
+
 func (s *Storage) SaveTask(ctx context.Context, name, description string, deadline time.Time) (int64, error) {
 	const op = "internal.delivery.sqlite.SaveTask"
 
@@ -53,6 +58,8 @@ func (s *Storage) SaveTask(ctx context.Context, name, description string, deadli
 	if err != nil {
 		return 0, fmt.Errorf("%s: %w", op, err)
 	}
+	defer stmt.Close()
+
 	res, err := stmt.ExecContext(ctx, name, description, deadline)
 	if err != nil {
 		return 0, fmt.Errorf("%s: %w", op, err)
