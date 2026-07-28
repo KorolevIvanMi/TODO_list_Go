@@ -1,9 +1,13 @@
 package main
 
 import (
+	"context"
 	"log/slog"
 	"net/http"
 	"os"
+	"os/signal"
+	"syscall"
+	"time"
 
 	"github.com/KorolevIvanMi/TODO_list_Go/internal/config"
 	taskhandler "github.com/KorolevIvanMi/TODO_list_Go/internal/delivery/http/handler/task_handler"
@@ -55,9 +59,27 @@ func main() {
 	log.Info("Server struct ready")
 	log.Info("starting todo list", slog.String("adress", cfg.Adress))
 
-	if err := srv.ListenAndServe(); err != nil {
-		log.Error("failed to start server")
-		os.Exit(1)
+	go func() {
+		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			log.Error("failed to start server")
+			os.Exit(1)
+		}
+	}()
+
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, syscall.SIGINT)
+	<-quit
+
+	log.Info("Shutting down server gracefully...")
+	shutdownTimeout := 30 * time.Second
+	ctx, cancel := context.WithTimeout(context.Background(), shutdownTimeout)
+	defer cancel()
+
+	if err := srv.Shutdown(ctx); err != nil {
+		log.Error("Server shutdown error", slog.String("error", err.Error()))
 	}
+
+	log.Info("Server stopped gracefully")
+
 	// log.Error("server stopped")s
 }
