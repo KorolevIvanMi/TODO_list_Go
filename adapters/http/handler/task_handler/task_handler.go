@@ -11,16 +11,18 @@ import (
 	"github.com/go-chi/render"
 )
 
-// type TaskHandler struct {
-// 	Uc usecase.UseCase
-// }
+type TaskHandler struct {
+	createUC createtask.UseCase
+}
 
-// func New(uc usecase.UseCase) *TaskHandler {
-// 	th := TaskHandler{Uc: uc}
-// 	return &th
-// }
+func New(
+	createUC *createtask.UseCase,
+) *TaskHandler {
+	th := TaskHandler{createUC: *createUC}
+	return &th
+}
 
-func CreateTaskHandler(log slog.Logger, h createtask.UseCase) http.HandlerFunc {
+func (handler *TaskHandler) CreateTaskHandler(log slog.Logger) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 
 		ctx := r.Context()
@@ -56,7 +58,7 @@ func CreateTaskHandler(log slog.Logger, h createtask.UseCase) http.HandlerFunc {
 		}
 		log.Info("handler validation is succed")
 
-		task, err := h.CreateTask(ctx, req.NAME, req.DESCRIPTION, req.DEADLINE)
+		task, err := handler.createUC.CreateTask(ctx, req.NAME, req.DESCRIPTION, req.DEADLINE)
 		if err != nil {
 			log.Error("Failed to decode request body", slog.String("err", err.Error()))
 			w.WriteHeader(http.StatusInternalServerError)
