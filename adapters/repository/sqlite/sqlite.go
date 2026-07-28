@@ -12,6 +12,7 @@ import (
 
 type TaskRepository interface {
 	SaveTask(ctx context.Context, name, description string, deadline time.Time) (int64, error)
+	GetAllTasks(ctx context.Context) (*sql.Rows, error)
 }
 
 type Storage struct {
@@ -19,7 +20,7 @@ type Storage struct {
 }
 
 func New(db_path string) (*Storage, error) {
-	const op = "internal.delivery.sqlite"
+	const op = "adapter.repo.sqlite"
 
 	db, err := sql.Open("sqlite3", db_path)
 	if err != nil {
@@ -43,7 +44,7 @@ func (s *Storage) Close() error {
 }
 
 func (s *Storage) SaveTask(ctx context.Context, name, description string, deadline time.Time) (int64, error) {
-	const op = "internal.delivery.sqlite.SaveTask"
+	const op = "adapter.repo.sqlite.SaveTask"
 
 	stmt, err := s.db.Prepare(`INSERT INTO tasks (name, description, deadline)
 	VALUES (?, ?, ?)`)
@@ -63,4 +64,15 @@ func (s *Storage) SaveTask(ctx context.Context, name, description string, deadli
 	}
 
 	return id, nil
+}
+
+func (s *Storage) GetAllTasks(ctx context.Context) (*sql.Rows, error) {
+	const op = "adapter.repo.sqlite.GetAllTasks"
+
+	res, err := s.db.QueryContext(ctx, `SELECT id, name, description, deadline FROM tasks`)
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+
+	return res, nil
 }

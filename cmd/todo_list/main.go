@@ -14,6 +14,7 @@ import (
 	"github.com/KorolevIvanMi/TODO_list_Go/adapters/logger"
 	"github.com/KorolevIvanMi/TODO_list_Go/adapters/repository/sqlite"
 	createtask "github.com/KorolevIvanMi/TODO_list_Go/internal/usecase/taskUsecase/createTask"
+	getalltasks "github.com/KorolevIvanMi/TODO_list_Go/internal/usecase/taskUsecase/getAllTasks"
 	"github.com/go-chi/chi/v5"
 )
 
@@ -38,15 +39,21 @@ func main() {
 	log.Info("Data base ready")
 	var repo sqlite.TaskRepository = storage
 
-	taskUseCase := createtask.New(repo)
+	CreateTaskUseCase := createtask.New(repo)
+	GetAllTasksUseCase := getalltasks.New(repo)
 	log.Info("UseCase ready")
 
-	taskHandler := taskhandler.New(taskUseCase)
+	taskHandler := taskhandler.New(
+		CreateTaskUseCase,
+		GetAllTasksUseCase,
+	)
+
 	log.Info("Task Handler ready")
 
 	// init router
 	router := chi.NewRouter()
-	router.Post("/task", taskHandler.CreateTaskHandler(*log))
+	router.Post("/task/", taskHandler.CreateTaskHandler(*log))
+	router.Get("/tasks/", taskHandler.GetAllTasks(*log))
 	log.Info("Router init")
 
 	// run server
