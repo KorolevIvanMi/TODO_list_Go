@@ -1,4 +1,4 @@
-package usecase
+package createtask
 
 import (
 	"context"
@@ -10,7 +10,7 @@ import (
 )
 
 type UseCase struct {
-	repo sqlite.TaskRepository
+	Repo sqlite.TaskRepository
 }
 
 type CreatedTask struct {
@@ -18,12 +18,6 @@ type CreatedTask struct {
 	Name        string
 	Description string
 	Deadline    time.Time
-}
-
-func New(repo sqlite.TaskRepository) *UseCase {
-	var uc UseCase
-	uc.repo = repo
-	return &uc
 }
 
 func (uc *UseCase) CreateTask(ctx context.Context, name, description string, deadline time.Time) (*CreatedTask, error) {
@@ -39,7 +33,7 @@ func (uc *UseCase) CreateTask(ctx context.Context, name, description string, dea
 		return nil, fmt.Errorf("%s: %w", op, err)
 	}
 
-	idx, err := uc.repo.SaveTask(ctx, task.Name, task.Description, task.Deadline)
+	idx, err := uc.Repo.SaveTask(ctx, task.Name, task.Description, task.Deadline)
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", op, err)
 	}

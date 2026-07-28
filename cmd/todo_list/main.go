@@ -10,10 +10,10 @@ import (
 	"time"
 
 	"github.com/KorolevIvanMi/TODO_list_Go/internal/config"
-	taskhandler "github.com/KorolevIvanMi/TODO_list_Go/internal/delivery/http/handler/task_handler"
+	taskHandler "github.com/KorolevIvanMi/TODO_list_Go/internal/delivery/http/handler/task_handler"
 	"github.com/KorolevIvanMi/TODO_list_Go/internal/delivery/sqlite"
 	"github.com/KorolevIvanMi/TODO_list_Go/internal/logger"
-	"github.com/KorolevIvanMi/TODO_list_Go/internal/usecase"
+	createtask "github.com/KorolevIvanMi/TODO_list_Go/internal/usecase/taskUsecase/createTask"
 	"github.com/go-chi/chi/v5"
 )
 
@@ -38,17 +38,18 @@ func main() {
 	log.Info("Data base ready")
 	var repo sqlite.TaskRepository = storage
 
-	taskUseCase := usecase.New(repo)
-
+	// taskUseCase := usecase.New(repo)
 	log.Info("UseCase ready")
 
-	taskHandler := taskhandler.New(*taskUseCase)
+	// taskHandler := taskhandler.New(*taskUseCase)
 	log.Info("Task Handler ready")
-	//TODO : init router
+
+	// init router
 	router := chi.NewRouter()
-	router.Post("/task", taskHandler.CreateTaskHandler(*log))
+	router.Post("/task", taskHandler.CreateTaskHandler(*log, createtask.UseCase{Repo: repo}))
 	log.Info("Router init")
-	//TODO : run server
+
+	// run server
 	srv := &http.Server{
 		Addr:         cfg.Adress,
 		Handler:      router,

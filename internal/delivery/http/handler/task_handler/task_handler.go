@@ -7,20 +7,20 @@ import (
 	"time"
 
 	"github.com/KorolevIvanMi/TODO_list_Go/internal/delivery/http/dto"
-	"github.com/KorolevIvanMi/TODO_list_Go/internal/usecase"
+	createtask "github.com/KorolevIvanMi/TODO_list_Go/internal/usecase/taskUsecase/createTask"
 	"github.com/go-chi/render"
 )
 
-type TaskHandler struct {
-	Uc usecase.UseCase
-}
+// type TaskHandler struct {
+// 	Uc usecase.UseCase
+// }
 
-func New(uc usecase.UseCase) *TaskHandler {
-	th := TaskHandler{Uc: uc}
-	return &th
-}
+// func New(uc usecase.UseCase) *TaskHandler {
+// 	th := TaskHandler{Uc: uc}
+// 	return &th
+// }
 
-func (th *TaskHandler) CreateTaskHandler(log slog.Logger) http.HandlerFunc {
+func CreateTaskHandler(log slog.Logger, h createtask.UseCase) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 
 		ctx := r.Context()
@@ -56,7 +56,7 @@ func (th *TaskHandler) CreateTaskHandler(log slog.Logger) http.HandlerFunc {
 		}
 		log.Info("handler validation is succed")
 
-		task, err := th.Uc.CreateTask(ctx, req.NAME, req.DESCRIPTION, req.DEADLINE)
+		task, err := h.CreateTask(ctx, req.NAME, req.DESCRIPTION, req.DEADLINE)
 		if err != nil {
 			log.Error("Failed to decode request body", slog.String("err", err.Error()))
 			w.WriteHeader(http.StatusInternalServerError)
