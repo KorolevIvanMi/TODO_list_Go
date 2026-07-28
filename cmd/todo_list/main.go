@@ -9,10 +9,10 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/KorolevIvanMi/TODO_list_Go/internal/config"
-	taskHandler "github.com/KorolevIvanMi/TODO_list_Go/internal/delivery/http/handler/task_handler"
-	"github.com/KorolevIvanMi/TODO_list_Go/internal/delivery/sqlite"
-	"github.com/KorolevIvanMi/TODO_list_Go/internal/logger"
+	"github.com/KorolevIvanMi/TODO_list_Go/adapters/config"
+	taskHandler "github.com/KorolevIvanMi/TODO_list_Go/adapters/http/handler/task_handler"
+	"github.com/KorolevIvanMi/TODO_list_Go/adapters/logger"
+	"github.com/KorolevIvanMi/TODO_list_Go/adapters/repository/sqlite"
 	createtask "github.com/KorolevIvanMi/TODO_list_Go/internal/usecase/taskUsecase/createTask"
 	"github.com/go-chi/chi/v5"
 )

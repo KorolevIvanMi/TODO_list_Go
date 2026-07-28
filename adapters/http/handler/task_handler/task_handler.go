@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/KorolevIvanMi/TODO_list_Go/internal/delivery/http/dto"
+	"github.com/KorolevIvanMi/TODO_list_Go/adapters/http/dto"
 	createtask "github.com/KorolevIvanMi/TODO_list_Go/internal/usecase/taskUsecase/createTask"
 	"github.com/go-chi/render"
 )

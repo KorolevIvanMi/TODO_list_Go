@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/KorolevIvanMi/TODO_list_Go/internal/delivery/sqlite"
+	"github.com/KorolevIvanMi/TODO_list_Go/adapters/repository/sqlite"
 	"github.com/KorolevIvanMi/TODO_list_Go/internal/domain"
 )
 
