@@ -14,6 +14,7 @@ import (
 	"github.com/KorolevIvanMi/TODO_list_Go/adapters/logger"
 	"github.com/KorolevIvanMi/TODO_list_Go/adapters/repository/sqlite"
 	createtask "github.com/KorolevIvanMi/TODO_list_Go/internal/usecase/taskUsecase/createTask"
+	deletetaskbyid "github.com/KorolevIvanMi/TODO_list_Go/internal/usecase/taskUsecase/deleteTaskByID"
 	getalltasks "github.com/KorolevIvanMi/TODO_list_Go/internal/usecase/taskUsecase/getAllTasks"
 	"github.com/go-chi/chi/v5"
 )
@@ -41,11 +42,13 @@ func main() {
 
 	CreateTaskUseCase := createtask.New(repo)
 	GetAllTasksUseCase := getalltasks.New(repo)
+	DeleteTaskByIdUseCase := deletetaskbyid.New(repo)
 	log.Info("UseCase ready")
 
 	taskHandler := taskhandler.New(
 		CreateTaskUseCase,
 		GetAllTasksUseCase,
+		DeleteTaskByIdUseCase,
 	)
 
 	log.Info("Task Handler ready")
@@ -54,6 +57,7 @@ func main() {
 	router := chi.NewRouter()
 	router.Post("/task/", taskHandler.CreateTaskHandler(*log))
 	router.Get("/tasks/", taskHandler.GetAllTasks(*log))
+	router.Delete("/deleteTask/{taskId}", taskHandler.DeleteTaskByID(*log))
 	log.Info("Router init")
 
 	// run server

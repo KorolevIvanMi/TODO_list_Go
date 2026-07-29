@@ -5,24 +5,29 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/KorolevIvanMi/TODO_list_Go/adapters/http/dto"
 	createtask "github.com/KorolevIvanMi/TODO_list_Go/internal/usecase/taskUsecase/createTask"
+	deletetaskbyid "github.com/KorolevIvanMi/TODO_list_Go/internal/usecase/taskUsecase/deleteTaskByID"
 	getalltasks "github.com/KorolevIvanMi/TODO_list_Go/internal/usecase/taskUsecase/getAllTasks"
+	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/render"
 )
 
 type TaskHandler struct {
-	createUC createtask.UseCase
-	getAllUC getalltasks.UseCase
+	createUC         createtask.UseCase
+	getAllUC         getalltasks.UseCase
+	deleteTaskByIdUC deletetaskbyid.UseCase
 }
 
 func New(
 	createUC *createtask.UseCase,
 	getAllUC *getalltasks.UseCase,
+	deleteTaskByIdUC *deletetaskbyid.UseCase,
 ) *TaskHandler {
-	th := TaskHandler{createUC: *createUC, getAllUC: *getAllUC}
+	th := TaskHandler{createUC: *createUC, getAllUC: *getAllUC, deleteTaskByIdUC: *deleteTaskByIdUC}
 	return &th
 }
 
@@ -111,9 +116,41 @@ func (handler *TaskHandler) GetAllTasks(log slog.Logger) http.HandlerFunc {
 		}
 		response.AMOUNT = uint64(len(*tasks))
 		response.STATUS = "OK"
+
 		log.Info("Parsing completed")
 		w.WriteHeader(http.StatusOK)
-
 		render.JSON(w, r, response)
+	}
+}
+
+func (handler *TaskHandler) DeleteTaskByID(log slog.Logger) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		ctx := r.Context()
+		ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
+		defer cancel()
+
+		const op = "internal.delivery.http.handler.task_handler.DeleteTaskById"
+		log.With(slog.String("op", op))
+
+		var requeredId int
+		requeredId, err := strconv.Atoi(chi.URLParam(r, "taskId"))
+		if err != nil {
+			log.Error("Failed to decode URL", slog.String("err", err.Error()))
+			w.WriteHeader(http.StatusBadRequest)
+			render.JSON(w, r, dto.DeleteTaskByIdResponse{STATUS: "ERROR"})
+			return
+		}
+		log.Info("Request body decoded")
+		id, err := handler.deleteTaskByIdUC.DeleteTaskByID(ctx, requeredId)
+		if err != nil {
+			log.Error("Failed to delete Task", slog.String("error", err.Error()))
+			w.WriteHeader(http.StatusInternalServerError)
+			render.JSON(w, r, dto.DeleteTaskByIdResponse{STATUS: "ERROR"})
+			return
+		}
+
+		log.Info("Delete operation completed")
+		w.WriteHeader(http.StatusOK)
+		render.JSON(w, r, dto.DeleteTaskByIdResponse{STATUS: "OK", ID: id})
 	}
 }

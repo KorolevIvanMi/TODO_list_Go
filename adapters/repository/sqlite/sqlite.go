@@ -13,6 +13,7 @@ import (
 type TaskRepository interface {
 	SaveTask(ctx context.Context, name, description string, deadline time.Time) (int64, error)
 	GetAllTasks(ctx context.Context) (*sql.Rows, error)
+	DeleteTaskByID(ctx context.Context, id int) (int, error)
 }
 
 type Storage struct {
@@ -75,4 +76,15 @@ func (s *Storage) GetAllTasks(ctx context.Context) (*sql.Rows, error) {
 	}
 
 	return res, nil
+}
+
+func (s *Storage) DeleteTaskByID(ctx context.Context, id int) (int, error) {
+	const op = "adapter.repo.sqlite.DeleteTaskByID"
+
+	_, err := s.db.ExecContext(ctx, `DELETE FROM tasks WHERE tasks.id = ?`, id)
+	if err != nil {
+		return 0, fmt.Errorf("%s: %w", op, err)
+	}
+	return id, nil
+
 }
