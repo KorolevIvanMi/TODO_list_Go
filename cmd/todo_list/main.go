@@ -16,6 +16,7 @@ import (
 	createtask "github.com/KorolevIvanMi/TODO_list_Go/internal/usecase/taskUsecase/createTask"
 	deletetaskbyid "github.com/KorolevIvanMi/TODO_list_Go/internal/usecase/taskUsecase/deleteTaskByID"
 	getalltasks "github.com/KorolevIvanMi/TODO_list_Go/internal/usecase/taskUsecase/getAllTasks"
+	updatetask "github.com/KorolevIvanMi/TODO_list_Go/internal/usecase/taskUsecase/updateTask"
 	"github.com/go-chi/chi/v5"
 )
 
@@ -43,12 +44,14 @@ func main() {
 	CreateTaskUseCase := createtask.New(repo)
 	GetAllTasksUseCase := getalltasks.New(repo)
 	DeleteTaskByIdUseCase := deletetaskbyid.New(repo)
+	UpdateTaskUseCase := updatetask.New(repo)
 	log.Info("UseCase ready")
 
 	taskHandler := taskhandler.New(
 		CreateTaskUseCase,
 		GetAllTasksUseCase,
 		DeleteTaskByIdUseCase,
+		UpdateTaskUseCase,
 	)
 
 	log.Info("Task Handler ready")
@@ -58,6 +61,7 @@ func main() {
 	router.Post("/task/", taskHandler.CreateTaskHandler(*log))
 	router.Get("/tasks/", taskHandler.GetAllTasks(*log))
 	router.Delete("/deleteTask/{taskId}", taskHandler.DeleteTaskByID(*log))
+	router.Post("/updateTask/{taskId}", taskHandler.UpdateTask(*log))
 	log.Info("Router init")
 
 	// run server

@@ -12,6 +12,7 @@ import (
 	createtask "github.com/KorolevIvanMi/TODO_list_Go/internal/usecase/taskUsecase/createTask"
 	deletetaskbyid "github.com/KorolevIvanMi/TODO_list_Go/internal/usecase/taskUsecase/deleteTaskByID"
 	getalltasks "github.com/KorolevIvanMi/TODO_list_Go/internal/usecase/taskUsecase/getAllTasks"
+	updatetask "github.com/KorolevIvanMi/TODO_list_Go/internal/usecase/taskUsecase/updateTask"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/render"
 )
@@ -20,14 +21,16 @@ type TaskHandler struct {
 	createUC         createtask.UseCase
 	getAllUC         getalltasks.UseCase
 	deleteTaskByIdUC deletetaskbyid.UseCase
+	updateTaskUC     updatetask.UseCase
 }
 
 func New(
 	createUC *createtask.UseCase,
 	getAllUC *getalltasks.UseCase,
 	deleteTaskByIdUC *deletetaskbyid.UseCase,
+	updateTaskUC *updatetask.UseCase,
 ) *TaskHandler {
-	th := TaskHandler{createUC: *createUC, getAllUC: *getAllUC, deleteTaskByIdUC: *deleteTaskByIdUC}
+	th := TaskHandler{createUC: *createUC, getAllUC: *getAllUC, deleteTaskByIdUC: *deleteTaskByIdUC, updateTaskUC: *updateTaskUC}
 	return &th
 }
 
@@ -152,5 +155,67 @@ func (handler *TaskHandler) DeleteTaskByID(log slog.Logger) http.HandlerFunc {
 		log.Info("Delete operation completed")
 		w.WriteHeader(http.StatusOK)
 		render.JSON(w, r, dto.DeleteTaskByIdResponse{STATUS: "OK", ID: id})
+	}
+}
+
+func (handler *TaskHandler) UpdateTask(log slog.Logger) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		ctx := r.Context()
+		ctx, cancel := context.WithTimeout(ctx, time.Second*5)
+		defer cancel()
+
+		const op = "internal.delivery.http.handler.task_handler.UpdateTask"
+		log.With(slog.String("operation", op))
+
+		idx, err := strconv.Atoi(chi.URLParam(r, "taskId"))
+		if err != nil {
+			log.Error("Failed to decode URL", slog.String("error", err.Error()))
+			w.WriteHeader(http.StatusBadRequest)
+			render.JSON(w, r, dto.UpdateTaskResponse{STATUS: "ERROR", ERROR: err.Error()})
+			return
+		}
+
+		var req dto.UpdateTaskRequest
+		err = render.DecodeJSON(r.Body, &req)
+		if err != nil {
+			log.Error("Failed to decode request body", slog.String("err", err.Error()))
+			w.WriteHeader(http.StatusBadRequest)
+			render.JSON(w, r, dto.UpdateTaskResponse{STATUS: "ERROR", ERROR: err.Error()})
+			return
+		}
+
+		if req.NAME != nil && *req.NAME == "" {
+			log.Error("Empty task name")
+			w.WriteHeader(http.StatusBadRequest)
+			render.JSON(w, r, dto.UpdateTaskResponse{STATUS: "ERROR", ERROR: "Bad task name"})
+			return
+		}
+
+		if req.DESCRIPTION != nil && *req.DESCRIPTION == "" {
+			log.Error("Empty description")
+			w.WriteHeader(http.StatusBadRequest)
+			render.JSON(w, r, dto.UpdateTaskResponse{STATUS: "ERROR", ERROR: "Bad description"})
+			return
+		}
+
+		if req.DEADLINE != nil && req.DEADLINE.IsZero() {
+			log.Error("Empty deadline")
+			w.WriteHeader(http.StatusBadRequest)
+			render.JSON(w, r, dto.UpdateTaskResponse{STATUS: "ERROR", ERROR: "Bad deadline"})
+			return
+		}
+
+		resId, err := handler.updateTaskUC.UpdateTask(ctx, idx, req.NAME, req.DESCRIPTION, req.DEADLINE)
+		if err != nil {
+			log.Error("Failed to update task", slog.String("err", err.Error()))
+			w.WriteHeader(http.StatusBadRequest)
+			render.JSON(w, r, dto.UpdateTaskResponse{STATUS: "ERROR", ERROR: err.Error()})
+			return
+		}
+
+		log.Info("Updating complited")
+		w.WriteHeader(http.StatusOK)
+		render.JSON(w, r, dto.UpdateTaskResponse{STATUS: "OK", ID: int64(resId)})
+
 	}
 }

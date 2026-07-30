@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"strings"
 	"time"
 
 	_ "github.com/mattn/go-sqlite3"
@@ -14,6 +15,7 @@ type TaskRepository interface {
 	SaveTask(ctx context.Context, name, description string, deadline time.Time) (int64, error)
 	GetAllTasks(ctx context.Context) (*sql.Rows, error)
 	DeleteTaskByID(ctx context.Context, id int) (int, error)
+	UpdateTask(ctx context.Context, id int, fileds map[string]interface{}) (int, error)
 }
 
 type Storage struct {
@@ -87,4 +89,37 @@ func (s *Storage) DeleteTaskByID(ctx context.Context, id int) (int, error) {
 	}
 	return id, nil
 
+}
+
+func (s *Storage) UpdateTask(ctx context.Context, id int, fileds map[string]interface{}) (int, error) {
+	const op = "adapter.repo.sqlite.UpdateTask"
+	if len(fileds) == 0 {
+		return 0, fmt.Errorf("%s: no fields to update", op)
+	}
+
+	allowedFileds := map[string]bool{
+		"name":        true,
+		"description": true,
+		"deadline":    true,
+	}
+
+	var args []string
+	arg_id := 1
+	var argsValue []interface{}
+
+	for field, value := range fileds {
+		if !allowedFileds[field] {
+			continue
+		}
+		args = append(args, fmt.Sprintf("%s = ?", field))
+		argsValue = append(argsValue, value)
+		arg_id++
+	}
+
+	req := fmt.Sprintf("UPDATE tasks SET %s WHERE tasks.id = %d", strings.Join(args, ","), id)
+	_, err := s.db.ExecContext(ctx, req, argsValue...)
+	if err != nil {
+		return 0, fmt.Errorf("%s: %w : %s", op, err, req)
+	}
+	return id, nil
 }

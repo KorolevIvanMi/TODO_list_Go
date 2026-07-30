@@ -30,3 +30,28 @@ func NewTask(name, description string, deadline time.Time) (*Task, error) {
 
 	return &new_task, nil
 }
+
+func UpdateTask(name, description *string, deadline *time.Time) (map[string]interface{}, error) {
+	const op = "internal.domain.UpdateTask"
+	result := make(map[string]interface{})
+	if name != nil {
+		if *name != "" {
+			result["name"] = name
+		}
+
+	}
+
+	if description != nil {
+		if *description != "" {
+			result["description"] = description
+		}
+
+	}
+	if deadline != nil {
+		if deadline.Before(time.Now()) {
+			return nil, fmt.Errorf("%s : deadline can not be in the past", op)
+		}
+		result["deadline"] = *deadline
+	}
+	return result, nil
+}
